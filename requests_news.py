@@ -1,12 +1,11 @@
-﻿import requests
+import requests
 from bs4 import BeautifulSoup
 import time
 from datetime import datetime, timedelta
 import logging
-import re 
 
 # лог
-logging.basicConfig(filename='prov.txt', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='1_log.txt', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # извлечения новостей
 def fetch_news(url):
@@ -15,22 +14,15 @@ def fetch_news(url):
         soup = BeautifulSoup(response.text, 'html.parser')
 
         # элементы с новостями 
-        news_items = soup.find_all('article', class_='article')  # Изменено на 'article'
+        news_items = soup.find_all('article', class_='article-body')
 
         for item in news_items:
-            try:
-                title = item.find('h3', class_='article-preview__title').text.strip() 
-                summary = item.find('p', class_='listing-preview__desc').text.strip()
-                authors = [author.text.strip() for author in item.find_all('a', class_='article-preview__author')]
-            except AttributeError:
-                title = ""
-                summary = ""
-                authors = ""
-                logging.warning(f"Не удалось получить данные для статьи на {url}")
-                continue
+            title = item.find('h2').text.strip() 
+            summary = item.find('p', class_='article-summary').text.strip()
+            authors = [author.text.strip() for author in item.find_all('a', class_='author-link')]
 
             # Проверка 
-            if any(keyword in item.text.lower() for keyword in ['Дрон','Байден','США','Путин','Россия','Крым']):
+            if 'democrat' in item.text.lower() or 'republican' in item.text.lower():
                 logging.info(f'Новая новость: \nЗаголовок: {title}\nАннотация: {summary}\nАвторы: {authors}\n---')
                 print(f'Заголовок: {title}')
                 print(f'Аннотация: {summary}')
@@ -51,7 +43,7 @@ def run_script():
 
         while datetime.now() < end_time:
             # новостной сайт
-            url = 'https://www.mk.ru/politics'
+            url = 'https://www.foxnews.com/politics'
             fetch_news(url)
 
             # Пауза перед следующим запросом (например, 10 минут(2))
